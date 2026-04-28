@@ -15,7 +15,7 @@ capital = st.sidebar.number_input("總本金 (HKD/USD)", min_value=0, value=1000
 risk_ratio = st.sidebar.slider("每筆交易願意承受的風險 (%)", 1, 10, 2) / 100
 
 # 3. 抓取數據
-data = yf.download(ticker, period="1y", interval="1d")
+data = yf.download(ticker, period="1y", interval="1d", auto_adjust=True)
 
 if not data.empty:
     # 4. 技術指標計算 (簡單均線走勢)
