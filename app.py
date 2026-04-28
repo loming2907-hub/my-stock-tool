@@ -17,9 +17,10 @@ try:
         # 用 Pandas 內建 rolling 算均線，不依賴 pandas-ta
         df['SMA20'] = df['Close'].rolling(window=20).mean()
         
-        current_price = float(df['Close'].values[-1])
+        current_price = float(df['Close'].values.flatten()[-1])
         # 處理 SMA 可能為空的情況
-        last_sma = df['SMA20'].values[-1]
+        sma_values = df['SMA20'].values.flatten()
+        last_sma = sma_values[-1]
         last_sma = float(last_sma) if not pd.isna(last_sma) else current_price
         
         # 資金計算
