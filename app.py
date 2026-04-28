@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import pandas as pd
 
 st.set_page_config(page_title="Stock Analyzer", layout="wide")
-st.title("📈 投資配資分析工具")
+st.title("📈 stock")
 
 st.sidebar.header("📊 投資參數")
 ticker = st.sidebar.text_input("股票代號", "0700.HK").upper()
