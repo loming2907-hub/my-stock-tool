@@ -2,6 +2,7 @@ import streamlit as st
 import yfinance as yf
 import pandas_ta as ta
 import plotly.graph_objects as go
+import pandas as pd
 
 # 1. 介面設定
 st.set_page_config(page_title="投資分析工具", layout="wide")
