@@ -79,7 +79,7 @@ if ticker_input:
         else:
             st.success(f"💰 預計投入成本: **${invest_cost:,.0f}** | 總入貨量: {final_shares} 股")
 
-        # 7. Groq AI 分析模組
+       # 7. Groq AI 分析模組
         st.markdown("---")
         if st.button("🤖 啟動 Groq AI 深度分析"):
             if not groq_api_key:
@@ -90,21 +90,21 @@ if ticker_input:
                         client = Groq(api_key=groq_api_key)
                         recent_summary = df[['Close', 'SMA20']].tail(10).to_string()
                         
+                        # 這裡就是出錯的地方，請確保引號完整
                         prompt = f"""
-                        你是資深投資顧問。請分析 {stock_name} ({ticker_input})：
-                        - 現價: {current_price:.2f}
-                        - 20MA: {last_sma:.2f}
-                        - 建議操作: 買入 {suggested_lots} 手，止蝕價設在 {stop_loss_price:.2f}
-                        
-                        最近10日數據:
-                        {recent_summary}
-                        
-                        請用繁體中文簡短回答：
-                        1. 當前走勢評論。
-                        2. 操作建議與風險。
-                        3. 給 iPhone 用戶的一句話總結。
-                        """
-                        
+你是資深投資顧問。請分析 {stock_name} ({ticker_input})：
+- 現價: {current_price:.2f}
+- 20MA: {last_sma:.2f}
+- 建議操作: 買入 {suggested_lots} 手，止蝕價設在 {stop_loss_price:.2f}
+
+最近10日數據:
+{recent_summary}
+
+請用繁體中文簡短回答：
+1. 當前走勢評論。
+2. 操作建議與風險。
+3. 給 iPhone 用戶的一句話總結。
+"""
                         chat_completion = client.chat.completions.create(
                             messages=[{"role": "user", "content": prompt}],
                             model="llama-3.3-70b-versatile",
