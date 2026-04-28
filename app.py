@@ -100,4 +100,35 @@ if ticker_input:
                         {recent_summary}
                         
                         請用繁體中文簡短回答：
-                        1. 當
+                        1. 當前走勢評論。
+                        2. 操作建議與風險。
+                        3. 給 iPhone 用戶的一句話總結。
+                        """
+                        
+                        chat_completion = client.chat.completions.create(
+                            messages=[{"role": "user", "content": prompt}],
+                            model="llama-3.3-70b-versatile",
+                        )
+                        st.info("### 🤖 Groq AI 專家建議")
+                        st.write(chat_completion.choices[0].message.content)
+                    except Exception as ai_e:
+                        st.error(f"AI 分析出錯: {ai_e}")
+
+        # 8. 視覺化圖表
+        fig = go.Figure(data=[go.Candlestick(
+            x=df.index,
+            open=df['Open'].values.flatten(),
+            high=df['High'].values.flatten(),
+            low=df['Low'].values.flatten(),
+            close=df['Close'].values.flatten(),
+            name='K線'
+        )])
+        fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'].values.flatten(), name='20MA', line=dict(color='orange')))
+        # 止蝕虛線
+        fig.add_hline(y=stop_loss_price, line_dash="dash", line_color="red", annotation_text="止蝕位")
+        
+        fig.update_layout(xaxis_rangeslider_visible=False, height=450, margin=dict(l=5, r=5, t=5, b=5))
+        st.plotly_chart(fig, use_container_width=True)
+
+    else:
+        st.error("無法讀取數據，請檢查代號 (例: 0700.HK) 或稍後再試。")
