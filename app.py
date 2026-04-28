@@ -49,42 +49,52 @@ try:
 
         # 6. AI 深度分析模組
         st.markdown("---")
+        # --- AI 分析按鈕 (自動偵測模型版) ---
         if st.button("🤖 啟動 Gemini AI 專家分析"):
             if not api_key:
-                st.error("請在左側選單輸入 API Key 才能啟動 AI 分析。")
+                st.error("請在左側選單輸入 API Key。")
             else:
-                with st.spinner("AI 正在閱讀 K 線與均線數據..."):
+                with st.spinner("正在尋找可用的 AI 模型並分析中..."):
                     try:
-                        # 準備傳送給 AI 的簡化數據
+                        # 1. 自動尋找名稱包含 'gemini' 且支援 generateContent 的模型
+                        available_models = [m.name for m in genai.list_models() 
+                                           if 'generateContent' in m.supported_generation_methods]
+                        
+                        # 優先順序：2.0-flash > 1.5-flash > 1.5-pro > 第一個可用模型
+                        selected_model_name = None
+                        for target in ['models/gemini-2.0-flash', 'models/gemini-1.5-flash', 'models/gemini-1.5-pro']:
+                            if target in available_models:
+                                selected_model_name = target
+                                break
+                        
+                        if not selected_model_name:
+                            selected_model_name = available_models[0]
+                        
+                        st.caption(f"使用模型: {selected_model_name}") # 讓你知道最後用了哪個型號
+                        
+                        # 2. 啟動分析
+                        model = genai.GenerativeModel(selected_model_name)
                         recent_summary = df[['Close', 'SMA20']].tail(15).to_string()
                         
-                        # 嘗試最通用的模型名稱
-                        model = genai.GenerativeModel('gemini-1.5-flash')
-                        
                         prompt = f"""
-                        你是一位資深股票分析專家。請分析股票 {ticker_input}：
+                        你是專業投資分析師，請分析股票 {ticker_input}：
+                        數據：{recent_summary}
+                        現價 {current_price:.2f}，20MA {last_sma:.2f}，走勢為 {trend_label}。
                         
-                        [最新數據]
-                        - 現價: {current_price:.2f}
-                        - 20日均線 (20MA): {last_sma:.2f}
-                        - 趨勢狀態: {trend_label}
-                        
-                        [最近15日歷史數據]
-                        {recent_summary}
-                        
-                        請根據以上數據提供：
-                        1. 走勢點評 (判斷支撐位或壓力位)。
-                        2. 具體操作建議 (現在適合入貨、加倉還是觀望？)。
-                        3. 給投資者的風險提示。
-                        請用繁體中文回答，語氣要專業且精簡。
+                        請提供：
+                        1. 短期走勢分析。
+                        2. 操作建議。
+                        3. 關鍵壓力與支撐位預測。
+                        使用繁體中文。
                         """
                         
                         response = model.generate_content(prompt)
-                        st.info("### 🤖 Gemini 投資建議")
+                        st.info("### 🤖 AI 分析結果")
                         st.write(response.text)
+                        
                     except Exception as ai_err:
-                        st.error(f"AI 分析失敗: {ai_err}")
-
+                        st.error(f"AI 連接失敗：{ai_err}")
+                        st.info("💡 提示：請確認您的 API Key 是否已在 Google AI Studio 啟用，且沒有地區限制。")
         # 7. 動態 K 線圖
         st.subheader("🔍 市場走勢圖")
         fig = go.Figure(data=[go.Candlestick(
