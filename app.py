@@ -20,23 +20,37 @@ risk_percent = st.sidebar.slider("單筆最大風險 (%)", 0.5, 5.0, 2.0, 0.5) /
 
 # 港股代號自動轉換邏輯
 if raw_ticker.isdigit():
-    ticker = f"{raw_ticker}:HK"
+    # 確保是 4 位數，例如 5 變成 0005
+    ticker = raw_ticker.zfill(4)
+    exchange_param = "XHKG" # 香港交易所
 else:
     ticker = raw_ticker
+    exchange_param = None
 
 # 3. 數據抓取函數 (加入快取防止重複消耗 API 額度)
 @st.cache_data(ttl=3600)
-def fetch_stock_data(api_key, symbol):
+def fetch_stock_data(api_key, symbol, exchange):
     try:
         td = TDClient(apikey=api_key)
-        # 抓取歷史 K 線 (250 天足以計算 20MA)
-        ts = td.time_series(symbol=symbol, interval="1day", outputsize=250, order="ASC").as_pandas()
-        # 抓取即時報價與詳細資訊 (包含名稱)
-        quote = td.quote(symbol=symbol).as_json()
-        return ts, quote
+        # 抓取歷史數據時，顯式加入 exchange 參數
+        ts_obj = td.time_series(
+            symbol=symbol,
+            exchange=exchange,
+            interval="1day",
+            outputsize=100, # 免費版抓 100 點最穩
+            order="ASC"
+        )
+        df = ts_obj.as_pandas()
+        
+        # 抓取報價資訊
+        quote = td.quote(symbol=symbol, exchange=exchange).as_json()
+        return df, quote
     except Exception as e:
         return None, str(e)
 
+# --- 調用處 ---
+with st.spinner("正在獲取數據..."):
+    df, quote_data = fetch_stock_data(td_api_key, ticker, exchange_param)
 # 4. 主程式邏輯
 if not td_api_key:
     st.info("💡 請在左側輸入你的 Twelve Data API Key 以開始。")
